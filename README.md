@@ -3,7 +3,7 @@ linux操作系统
 
 ## 运行
 ```
-git clone          #克隆源码
+git clone https://github.com/Yibangyu/updatepy.git         #克隆源码
 cd updatepy        #进入根目录
 
 bash update        #更新或下载python最新稳定版
