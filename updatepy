@@ -1,0 +1,84 @@
+#!/usr/bin/bash
+# author:Yibangyu
+# url:www.yuyicloud.cn
+
+#versions=('2.0','2.0.1','2.1','2.1.1','2.1.2','2.1.3','2.2','2.2.1','2.2.2','2.2.3','2.3','2.3.1','2.3.2','2.3.3','2.3.4','2.3.5',
+#            '2.3.6','2.3.7','2.4','2.4.1','2.4.2','2.4.3','2.4.4','2.4.5','2.4.6','2.5','2.5.1','2.5.2','2.5.3','2.5.6','2.6',
+#            '2.6.1','2.6.2','2.6.3','2.6.4','2.6.5','2.6.6','2.6.7','2.6.8','2.6.9','2.7','2.7.1','2.7.2','2.7.3','2.7.4','2.7.5','2.7.6','2.7.7','2.7.8',
+#            )
+
+
+#查看可更新的版本列表
+function list(){
+    echo -e "The available version is:" 
+    printf '%s\t' $(echo "$versions")
+    echo ""
+    exit 0
+}
+
+#升级到最新版本
+function update(){
+    lastversion=$(echo "$versions" | tail -1)
+    nowversion=$(python -V | awk '{print $2}')
+    if [ "$lastversion" == "$nowversion" ];then
+        echo "This is the latest version."
+    else
+        updatePython $lastversion
+    fi
+}
+#升级到指定版本
+function updatex(){
+    #nowversion=$(python -V | awk '{print $2}')
+    #if [ "$nowversion" == "${1}" ];then
+    #    echo "当前版本为${1}，无需重新更新"
+    #    exit
+    #else
+    #   echo "开始跟新版本信息"
+    #    exit
+        updatePython $1
+    #fi
+}
+
+#升级程序，传入升级的版本
+function updatePython(){
+    downDir="/usr/local/src"
+    filename="Python-${1}"
+    installDir="/usr/local/${filename}"
+    url="https://www.python.org/ftp/python/${1}/${filename}.tgz"
+    shellname="${installDir}/bin/python${1:0:3}"
+    cd ${downDir}  && wget -O "${filename}.tgz" ${url} && tar -zxvf  "${filename}.tgz"
+    cd ${filename} && ./configure --prefix=${installDir} && make && make install
+    rm -rf /usr/bin/python > /dev/null  2>&1
+    ln -s ${shellname} /usr/bin/python
+    rm -rf "${downDir}/${filename}.tgz" >/dev/null 2>&1
+    rm -rf "${downDir}/${filename}" >/dev/null 2>&1
+    echo -e "\033[32m The version is updated successfully. \033[0m"
+}
+
+
+
+echo "Get started with available version information. ."
+wget -O .tmp_python.data -q 'https://www.python.org/ftp/python' > /dev/null
+versions=$(cat .tmp_python.data | grep '\(>[0-9]\.[0-9]\.[0-9]\|>[0-9]\.[0-9]\)' | cut -d ">" -f 2 | cut -d "/" -f 1 | sed '$d' )
+rm -rf .tmp_python.data
+
+
+
+case $1 in 
+    "list")
+        list
+        exit 0
+        ;;
+     '')
+        update
+        exit 0
+        ;;
+     *)
+        if [ ! -z $(echo "$versions" | grep "^${1}$" ) ];then
+            updatex $1
+        else
+            echo -e "\033[31m Error: Your updated version does not exist. \033[0m"
+            echo -e "Enter 'update list' to see the available version information"
+        fi
+        ;;
+esac
